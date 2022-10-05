@@ -72,5 +72,5 @@ void update_state (unsigned char byte){
 
 void reset_state() {
     state_m.curr_state = START;
-    state_m.prev_response = NULL;
+    state_m.prev_response = R_NULL;
 }

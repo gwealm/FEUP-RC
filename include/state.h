@@ -18,6 +18,9 @@ typedef enum{
  * @brief Control Bit Options for Receiver
  */
 typedef enum{
+
+    R_NULL,
+
     // Unnumbered Acknowledgment (0x07)
     UA,
 
