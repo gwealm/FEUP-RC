@@ -14,11 +14,9 @@
 
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
-#define BUF_SIZE 256
 
 struct termios oldtio;
 int fd;
-volatile int STOP_ = FALSE;
 
 ////////////////////////////////////////////////
 // LLOPEN
@@ -101,8 +99,9 @@ int llwrite(const unsigned char *buf, int bufSize)
 int llread(unsigned char *packet)
 {
     int i = 0;
+    reset_state();
 
-    while (STOP_ == FALSE)
+    while (get_curr_state() != STOP)
     {
         // Returns after 1 char has been input
         int bytes = read(fd, &packet[i], 1);
@@ -110,12 +109,8 @@ int llread(unsigned char *packet)
 
         printf("%x\n", packet[i]);
         update_state(packet[i]);
-        printf("%d\n", get_curr_state);
 
-        if (get_curr_state() == STOP)
-            break;
-        else
-            i++;
+        i++;
 
     }
 

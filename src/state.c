@@ -32,37 +32,41 @@ void update_state (unsigned char byte){
     switch(state_m.curr_state){
         case START:
             if (byte == FLAG) 
-                state_m.curr_state = FLAG_RCV;
+                set_state(FLAG_RCV);
             break;
         case FLAG_RCV:
             if (byte == FLAG)
                 break;
-            else if (byte == ADDR)
-                state_m.curr_state = A_RCV; 
+            else if (byte == ADDR){
+                set_address(byte);
+                set_state(A_RCV);
+            }    
             else 
-                state_m.curr_state = START;
-
+                set_state(START);
+            break;
         case A_RCV:
             if (byte == FLAG) 
-                state_m.curr_state = FLAG_RCV;
-            else if (byte == 0x03)
-                state_m.curr_state = C_RCV; 
+                set_state(FLAG_RCV);
+            else if (byte == 0x03){
+                set_control(byte);
+                set_state(C_RCV);
+            }
             else 
-                state_m.curr_state = START;    
+                set_state(START);   
             break;
         case C_RCV:
             if (byte == (state_m.address ^ state_m.control)) 
-                state_m.curr_state = BCC_OK;
+                set_state(BCC_OK);
             else if (byte == FLAG) 
-                state_m.curr_state = FLAG_RCV;
+                set_state(FLAG_RCV);
             else 
-                state_m.curr_state = START;    
+                set_state(START);  
             break;
         case BCC_OK:
             if (byte == FLAG) 
-                state_m.curr_state = STOP;
+                set_state(STOP);
             else 
-                state_m.curr_state = START;    
+                set_state(START);
             break;
         case STOP:
             break;

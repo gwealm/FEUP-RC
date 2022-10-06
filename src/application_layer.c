@@ -8,7 +8,7 @@
 #include "link_layer.h"
 #include "state.h"
 
-#define BUF_SIZE 256
+#define BUF_SIZE 16
 
 
 void applicationLayer(const char *serialPort, const char *role, int baudRate,
