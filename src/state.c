@@ -16,6 +16,10 @@ state get_curr_state() {
     return state_m.curr_state;
 }
 
+role get_curr_role() {
+    return state_m.curr_role;
+}
+
 void set_address(unsigned char s) {
     state_m.address = s;
 }
@@ -26,6 +30,10 @@ void set_control(unsigned char c) {
 
 void set_state(state s) {
     state_m.curr_state = s;
+}
+
+void set_role(role r) {
+    state_m.curr_role = r;
 }
 
 void update_state (unsigned char byte){
@@ -47,7 +55,11 @@ void update_state (unsigned char byte){
         case A_RCV:
             if (byte == FLAG) 
                 set_state(FLAG_RCV);
-            else if (byte == 0x03){
+            else if (byte == 0x03 && get_curr_role()==RECEIVER){
+                set_control(byte);
+                set_state(C_RCV);
+            }
+            else if (byte == 0x07 && get_curr_role()==TRANSMITTER){
                 set_control(byte);
                 set_state(C_RCV);
             }

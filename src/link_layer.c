@@ -114,8 +114,6 @@ int llread(unsigned char *packet)
 
     }
 
-    printf("finished reading\n");
-
 
 
     return 0;

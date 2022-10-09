@@ -15,6 +15,16 @@ typedef enum{
 } command;
 
 /**
+ * @brief Machine Role Options
+ */
+typedef enum{
+
+    TRANSMITTER,
+    
+    RECEIVER
+} role;
+
+/**
  * @brief Control Bit Options for Receiver
  */
 typedef enum{
@@ -70,6 +80,9 @@ typedef struct {
     // Previous response
     response prev_response;
 
+    // Role
+    role curr_role;
+
 } state_machine;
 
 // Getters
@@ -77,11 +90,13 @@ unsigned char get_address();
 unsigned char get_control();
 unsigned char get_flag();
 state get_curr_state();
+role get_curr_role();
 
 // Setters
 void set_address(unsigned char s);
 void set_control(unsigned char s);
 void set_state(state s);
+void set_role(role r);
 
 /**
  * @brief Updates the State Machine
