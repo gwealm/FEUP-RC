@@ -1,7 +1,6 @@
 #pragma once
 
-#define FLAG 0x7E
-#define ADDR 0x03
+
 
 /**
  * @brief Control Bit Options for Emissor

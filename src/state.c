@@ -1,4 +1,5 @@
 #include "state.h"
+#include "constants.h"
 
 #include <stdio.h>
 
@@ -36,8 +37,8 @@ void set_role(role r) {
     state_m.curr_role = r;
 }
 
-void update_state (unsigned char byte){
-    switch(state_m.curr_state){
+void update_state (unsigned char byte) {
+    switch(state_m.curr_state) {
         case START:
             if (byte == FLAG) 
                 set_state(FLAG_RCV);
@@ -45,26 +46,26 @@ void update_state (unsigned char byte){
         case FLAG_RCV:
             if (byte == FLAG)
                 break;
-            else if (byte == ADDR){
+            else if (byte == ADDR) {
                 set_address(byte);
                 set_state(A_RCV);
-            }    
-            else 
+            } else {
                 set_state(START);
+            }
+
             break;
         case A_RCV:
             if (byte == FLAG) 
                 set_state(FLAG_RCV);
-            else if (byte == 0x03 && get_curr_role()==RECEIVER){
+            else if (byte == 0x03 && get_curr_role() == RECEIVER) {
                 set_control(byte);
                 set_state(C_RCV);
-            }
-            else if (byte == 0x07 && get_curr_role()==TRANSMITTER){
+            } else if (byte == 0x07 && get_curr_role() == TRANSMITTER) {
                 set_control(byte);
                 set_state(C_RCV);
-            }
-            else 
+            } else {
                 set_state(START);   
+            }
             break;
         case C_RCV:
             if (byte == (state_m.address ^ state_m.control)) 

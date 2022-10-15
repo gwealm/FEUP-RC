@@ -1,8 +1,4 @@
-// Application layer protocol header.
-// NOTE: This file must not be changed.
-
-#ifndef _APPLICATION_LAYER_H_
-#define _APPLICATION_LAYER_H_
+#pragma once
 
 // Application layer main function.
 // Arguments:
@@ -15,4 +11,3 @@
 void applicationLayer(const char *serialPort, const char *role, int baudRate,
                       int nTries, int timeout, const char *filename);
 
-#endif // _APPLICATION_LAYER_H_

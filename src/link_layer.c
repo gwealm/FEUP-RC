@@ -1,5 +1,11 @@
 // Link layer protocol implementation
 
+
+#include "link_layer.h"
+#include "state.h"
+#include "constants.h"
+#include "alarm.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,27 +15,24 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "link_layer.h"
-#include "state.h"
-
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
 
 struct termios oldtio;
 int fd;
+#define BUF_SIZE 16
 
 ////////////////////////////////////////////////
-// LLOPEN
+/// LLOPEN                                   ///   
 ////////////////////////////////////////////////
-int llopen(LinkLayer connectionParameters)
-{
+int llopen(LinkLayer connectionParameters) {
+
     // Open serial port device for reading and writing and not as controlling tty
     // because we don't want to get killed if linenoise sends CTRL-C.
     fd = open(connectionParameters.serialPort, O_RDWR | O_NOCTTY);
     
     
-    if (fd < 0)
-    {
+    if (fd < 0) {
         printf("%s", connectionParameters.serialPort);
         perror(connectionParameters.serialPort);
         exit(-1);
@@ -38,8 +41,7 @@ int llopen(LinkLayer connectionParameters)
     struct termios newtio;
 
     // Save current port settings
-    if (tcgetattr(fd, &oldtio) == -1)
-    {
+    if (tcgetattr(fd, &oldtio) == -1) {
         perror("tcgetattr");
         exit(-1);
     }
@@ -67,22 +69,65 @@ int llopen(LinkLayer connectionParameters)
     tcflush(fd, TCIOFLUSH);
 
     // Set new port settings
-    if (tcsetattr(fd, TCSANOW, &newtio) == -1)
-    {
+    if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
         perror("tcsetattr");
         exit(-1);
     }
 
     printf("New termios structure set\n");
 
-    return 1;
+    switch (connectionParameters.role){
+        case TRANSMITTER:
+            set_role(TRANSMITTER);
+            unsigned char buf[BUF_SIZE] = {0};
+            buf[0] = FLAG;
+            buf[1] = ADDR;
+            buf[2] = 0x03;
+            buf[4] = FLAG;
+
+            // Set alarm function handler
+            (void)signal(SIGALRM, alarmHandler);
+
+            if (llwrite(buf, BUF_SIZE)>0)
+                printf("SET message sent successfully\n");
+
+            memset(buf, 0, BUF_SIZE);
+
+            if (llread(buf) == 0){
+                printf("UA received successfully\n");
+                return 1;
+            }
+            
+            break;
+        case RECEIVER:
+            set_role(RECEIVER);
+            unsigned char packet[BUF_SIZE] = {0};
+
+            if (llread(packet) == 0)
+                printf("SET received successfully\n");
+
+            unsigned char buf0[BUF_SIZE] = {0};
+
+            buf0[0] = FLAG;
+            buf0[1] = ADDR;
+            buf0[2] = 0x07;
+            buf0[3] = 0x04;
+            buf0[4] = FLAG;
+
+            if (llwrite(buf0, BUF_SIZE)>0){
+                printf("UA sent successfully\n");
+                return 1;
+            }
+            break;
+    }
+
+    return -1;
 }
 
 ////////////////////////////////////////////////
 // LLWRITE
 ////////////////////////////////////////////////
-int llwrite(const unsigned char *buf, int bufSize)
-{
+int llwrite(const unsigned char *buf, int bufSize) {
     int bytes = write(fd, buf, bufSize);
     printf("%d bytes written\n", bytes);
 
@@ -96,13 +141,11 @@ int llwrite(const unsigned char *buf, int bufSize)
 ////////////////////////////////////////////////
 // LLREAD
 ////////////////////////////////////////////////
-int llread(unsigned char *packet)
-{
+int llread(unsigned char *packet) {
     int i = 0;
     reset_state();
 
-    while (get_curr_state() != STOP)
-    {
+    while (get_curr_state() != STOP) {
         // Returns after 1 char has been input
         int bytes = read(fd, &packet[i], 1);
 
@@ -111,7 +154,6 @@ int llread(unsigned char *packet)
         update_state(packet[i]);
 
         i++;
-
     }
 
 
@@ -122,11 +164,10 @@ int llread(unsigned char *packet)
 ////////////////////////////////////////////////
 // LLCLOSE
 ////////////////////////////////////////////////
-int llclose(int showStatistics)
-{
+int llclose(int showStatistics) {
+
     // Restore the old port settings
-    if (tcsetattr(fd, TCSANOW, &oldtio) == -1)
-    {
+    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
         exit(-1);
     }
