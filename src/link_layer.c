@@ -80,41 +80,60 @@ int llopen(LinkLayer connectionParameters) {
         case TRANSMITTER:
             set_role(TRANSMITTER);
             unsigned char buf[BUF_SIZE] = {0};
-            buf[0] = FLAG;
-            buf[1] = ADDR;
-            buf[2] = 0x03;
-            buf[4] = FLAG;
 
             // Set alarm function handler
-            (void)signal(SIGALRM, alarmHandler);
+            (void)signal(SIGALRM, alarm_handler);
+            // Set alarm count as 0 (first time sending)
+            reset_alarm_count();
 
-            if (llwrite(buf, BUF_SIZE)>0)
-                printf("SET message sent successfully\n");
+            while (get_alarm_count() < 3){
+                set_alarm_flag(FALSE);
 
-            memset(buf, 0, BUF_SIZE);
+                memset(buf, 0, BUF_SIZE);
+                buf[0] = FLAG;
+                buf[1] = ADDR;
+                buf[2] = 0x03;
+                buf[4] = FLAG;
 
-            if (llread(buf) == 0){
-                printf("UA received successfully\n");
-                return 1;
+                if (llwrite(buf, BUF_SIZE)>0)
+                    printf("SET message sent successfully\n");
+
+                alarm(3);
+                
+
+                memset(buf, 0, BUF_SIZE);
+                
+                if (llread(buf) == 0){
+                    printf("UA received successfully\n");
+                    reset_alarm_count();
+                    return 1;
+                }
+                
             }
+
             
             break;
         case RECEIVER:
             set_role(RECEIVER);
+
             unsigned char packet[BUF_SIZE] = {0};
 
-            if (llread(packet) == 0)
+            if(llread(packet)==0){
                 printf("SET received successfully\n");
+            }
+            else{
+                break;
+            }
 
-            unsigned char buf0[BUF_SIZE] = {0};
+            memset(packet, 0, BUF_SIZE);
 
-            buf0[0] = FLAG;
-            buf0[1] = ADDR;
-            buf0[2] = 0x07;
-            buf0[3] = 0x04;
-            buf0[4] = FLAG;
+            packet[0] = FLAG;
+            packet[1] = ADDR;
+            packet[2] = 0x07;
+            packet[3] = 0x04;
+            packet[4] = FLAG;
 
-            if (llwrite(buf0, BUF_SIZE)>0){
+            if (llwrite(packet, BUF_SIZE)>0){
                 printf("UA sent successfully\n");
                 return 1;
             }
@@ -145,15 +164,27 @@ int llread(unsigned char *packet) {
     int i = 0;
     reset_state();
 
-    while (get_curr_state() != STOP) {
+    while (get_curr_state() != STOP && !get_alarm_flag()) {
+
+        if (i >= BUF_SIZE){
+            continue;
+        }
+
         // Returns after 1 char has been input
         int bytes = read(fd, &packet[i], 1);
 
 
         printf("%x\n", packet[i]);
-        update_state(packet[i]);
+        if (bytes !=-1){
+            update_state(packet[i]);
+        }
 
         i++;
+    }
+
+    if (get_curr_state() != STOP) {
+        printf("Failed to get response!\n");
+        return -1;
     }
 
 
