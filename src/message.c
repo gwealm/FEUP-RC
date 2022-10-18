@@ -1,6 +1,6 @@
 #include "message.h"
 
-#define MAX_BUF_SIZE 256
+#define MAX_BUF_SIZE 16
 
 int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
     uint8_t *buffer = (uint8_t*)malloc(5);
@@ -49,7 +49,7 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     uint8_t stuffed_msg[msg_len * 2];
     msg_len = msg_stuff(buffer, 1, msg_len, stuffed_msg);
     stuffed_msg[msg_len++] = FLAG;
-    
+    /*
     reset_alarm_count();
     int ack_received = FALSE;
 
@@ -57,7 +57,7 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
         respon 
 
         alarm_handler();
-    }
+    }*/
 
 
     
@@ -99,12 +99,10 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
             }
             int bytes = read(fd, buf + i, 1);
 
-
             printf("%x\n", buf[i]);
             if (bytes !=-1){
                 update_state(buf[i]);
             }
-
             i++;
         }
 
