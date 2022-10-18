@@ -2,6 +2,7 @@
 #include "constants.h"
 
 
+// alarm_flag represents if the alarm is enabled or not
 int alarm_flag = FALSE;
 int alarm_count = 0;
 

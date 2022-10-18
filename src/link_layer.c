@@ -5,6 +5,7 @@
 #include "state.h"
 #include "constants.h"
 #include "alarm.h"
+#include "common.h"
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -79,8 +80,13 @@ int llopen(LinkLayer connectionParameters) {
     switch (connectionParameters.role){
         case TRANSMITTER:
             set_role(TRANSMITTER);
-            unsigned char buf[BUF_SIZE] = {0};
-
+            (void)signal(SIGALRM, alarm_handler);
+            if (start_transmissor(fd) < 0){
+                printf("Could not start TRANSMITTER\n");
+                return -1;
+            }
+            break;
+            /*unsigned char buf[BUF_SIZE] = {0};
             // Set alarm function handler
             (void)signal(SIGALRM, alarm_handler);
             // Set alarm count as 0 (first time sending)
@@ -111,19 +117,25 @@ int llopen(LinkLayer connectionParameters) {
                 
             }
 
-            
-            break;
+            free(buf);
+            break;*/
         case RECEIVER:
             set_role(RECEIVER);
+            (void)signal(SIGALRM, alarm_handler);
 
+            if (start_receiver(fd) < 0){
+                printf("Could not start RECEIVER\n");
+                return -1;
+            }
+            break;
+            /*
             unsigned char packet[BUF_SIZE] = {0};
-
-            if(llread(packet)==0){
+            
+            if(llread(packet) == 0)
                 printf("SET received successfully\n");
-            }
-            else{
+            else
                 break;
-            }
+            
 
             memset(packet, 0, BUF_SIZE);
 
@@ -137,30 +149,52 @@ int llopen(LinkLayer connectionParameters) {
                 printf("UA sent successfully\n");
                 return 1;
             }
-            break;
+
+            break;*/
     }
 
-    return -1;
+    return 1;
+}
+
+int start_receiver(int fd) {
+    unsigned char message[5];
+    if (read_message(fd, message, 5) != 0) 
+        return -1;
+    return send_s_frame(fd, ADDR, 0x07, NO_RESP);
+}
+
+
+int start_transmissor(int fd) {
+    return send_s_frame(fd, ADDR, 0x03, R_UA);
 }
 
 ////////////////////////////////////////////////
 // LLWRITE
 ////////////////////////////////////////////////
 int llwrite(const unsigned char *buf, int bufSize) {
+
+    /*
+    
+    
+    int len = msg_stuff(buf, )
+
     int bytes = write(fd, buf, bufSize);
+
+        
+
+
     printf("%d bytes written\n", bytes);
 
-    // Wait until all bytes have been written to the serial port
-    sleep(1);
     
 
-    return bytes;
+    return bytes;*/
 }
 
 ////////////////////////////////////////////////
 // LLREAD
 ////////////////////////////////////////////////
 int llread(unsigned char *packet) {
+    /*
     int i = 0;
     reset_state();
 
@@ -189,7 +223,7 @@ int llread(unsigned char *packet) {
 
 
 
-    return 0;
+    return 0;*/
 }
 
 ////////////////////////////////////////////////
