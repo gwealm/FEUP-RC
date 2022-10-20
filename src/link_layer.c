@@ -57,8 +57,15 @@ int llopen(LinkLayer connectionParameters) {
     // Set input mode (non-canonical, no echo,...)
     newtio.c_lflag = 0;
     newtio.c_cc[VTIME] = 0; // Inter-character timer unused
-    newtio.c_cc[VMIN] = 1;  // Blocking read until n chars received
-
+    switch (connectionParameters.role){
+        case TRANSMITTER:
+            newtio.c_cc[VMIN] = 0;  // Blocking read until n chars received
+            newtio.c_cc[VTIME] = connectionParameters.timeout; // Inter-character timer unused
+            break;
+        case RECEIVER:
+            newtio.c_cc[VMIN] = 1;  // Blocking read until n chars received
+            break;    
+    }
     // VTIME e VMIN should be changed in order to protect with a
     // timeout the reception of the following character(s)
 
@@ -86,39 +93,7 @@ int llopen(LinkLayer connectionParameters) {
                 return -1;
             }
             break;
-            /*unsigned char buf[BUF_SIZE] = {0};
-            // Set alarm function handler
-            (void)signal(SIGALRM, alarm_handler);
-            // Set alarm count as 0 (first time sending)
-            reset_alarm_count();
-
-            while (get_alarm_count() < 3){
-                set_alarm_flag(FALSE);
-
-                memset(buf, 0, BUF_SIZE);
-                buf[0] = FLAG;
-                buf[1] = ADDR;
-                buf[2] = 0x03;
-                buf[4] = FLAG;
-
-                if (llwrite(buf, BUF_SIZE)>0)
-                    printf("SET message sent successfully\n");
-
-                alarm(3);
-                
-
-                memset(buf, 0, BUF_SIZE);
-                
-                if (llread(buf) == 0){
-                    printf("UA received successfully\n");
-                    reset_alarm_count();
-                    return 1;
-                }
-                
-            }
-
-            free(buf);
-            break;*/
+            
         case RECEIVER:
             set_role(RECEIVER);
             (void)signal(SIGALRM, alarm_handler);
@@ -128,31 +103,10 @@ int llopen(LinkLayer connectionParameters) {
                 return -1;
             }
             break;
-            /*
-            unsigned char packet[BUF_SIZE] = {0};
             
-            if(llread(packet) == 0)
-                printf("SET received successfully\n");
-            else
-                break;
-            
-
-            memset(packet, 0, BUF_SIZE);
-
-            packet[0] = FLAG;
-            packet[1] = ADDR;
-            packet[2] = 0x07;
-            packet[3] = 0x04;
-            packet[4] = FLAG;
-
-            if (llwrite(packet, BUF_SIZE)>0){
-                printf("UA sent successfully\n");
-                return 1;
-            }
-
-            break;*/
     }
 
+    printf("Connection open\n");
     return 1;
 }
 
@@ -231,6 +185,7 @@ int llread(unsigned char *packet) {
 ////////////////////////////////////////////////
 int llclose(int showStatistics) {
 
+    sleep(1);
     // Restore the old port settings
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");

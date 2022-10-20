@@ -60,9 +60,15 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     }*/
 
 
+    if (send_message(fd, buffer, msg_len, R_RR) != 0){  // should work for R_REJ as well as R_RR
+        free(buffer);
+        return -1;
+    }
+
     
 
-    return buffer;
+    free(buffer);
+    return 0;
 }
 
 int send_message(int fd, uint8_t *frame, int msg_size, command response){
