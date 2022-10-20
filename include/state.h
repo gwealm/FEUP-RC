@@ -1,16 +1,25 @@
 #pragma once
 
-
+#include <stdint.h>
 
 /**
  * @brief Control Bit Options for Emissor
  */
 typedef enum{
     // Set up (0x03)
-    SET,
+    CMD_SET,
 
     // Disconnect (0x0B)
-    DISC,
+    CMD_DISC,
+
+
+    CMD_DATA,
+
+    R_UA,
+
+    R_RR,
+
+    R_REJ
 } command;
 
 /**
@@ -56,6 +65,8 @@ typedef enum {
     // Control Received State
     C_RCV,
 
+    CDISCARD,
+
     // BCC Verification Passed State
     BCC_OK,
 
@@ -71,10 +82,10 @@ typedef struct {
     state curr_state;
 
     // Address Byte
-    unsigned char address;
+    uint8_t address;
 
     // Control Byte
-    unsigned char control;
+    uint8_t control;
 
     // Previous response
     response prev_response;
@@ -85,15 +96,15 @@ typedef struct {
 } state_machine;
 
 // Getters
-unsigned char get_address();
-unsigned char get_control();
-unsigned char get_flag();
+uint8_t get_address();
+uint8_t get_control();
+uint8_t get_flag();
 state get_curr_state();
 role get_curr_role();
 
 // Setters
-void set_address(unsigned char s);
-void set_control(unsigned char s);
+void set_address(uint8_t s);
+void set_control(uint8_t s);
 void set_state(state s);
 void set_role(role r);
 
@@ -102,6 +113,6 @@ void set_role(role r);
  * 
  * @param byte 
  */
-void update_state(unsigned char byte);
+void update_state(uint8_t byte);
 
 void reset_state();

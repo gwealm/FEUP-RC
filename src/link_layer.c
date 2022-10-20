@@ -5,6 +5,7 @@
 #include "state.h"
 #include "constants.h"
 #include "alarm.h"
+#include "common.h"
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -56,8 +57,15 @@ int llopen(LinkLayer connectionParameters) {
     // Set input mode (non-canonical, no echo,...)
     newtio.c_lflag = 0;
     newtio.c_cc[VTIME] = 0; // Inter-character timer unused
-    newtio.c_cc[VMIN] = 1;  // Blocking read until 1 chars received
-
+    switch (connectionParameters.role){
+        case TRANSMITTER:
+            newtio.c_cc[VMIN] = 0;  // Blocking read until n chars received
+            newtio.c_cc[VTIME] = connectionParameters.timeout; // Inter-character timer unused
+            break;
+        case RECEIVER:
+            newtio.c_cc[VMIN] = 1;  // Blocking read until n chars received
+            break;    
+    }
     // VTIME e VMIN should be changed in order to protect with a
     // timeout the reception of the following character(s)
 
@@ -79,86 +87,97 @@ int llopen(LinkLayer connectionParameters) {
     switch (connectionParameters.role){
         case TRANSMITTER:
             set_role(TRANSMITTER);
-            unsigned char buf[BUF_SIZE] = {0};
-            buf[0] = FLAG;
-            buf[1] = ADDR;
-            buf[2] = 0x03;
-            buf[4] = FLAG;
-
-            // Set alarm function handler
-            (void)signal(SIGALRM, alarmHandler);
-
-            if (llwrite(buf, BUF_SIZE)>0)
-                printf("SET message sent successfully\n");
-
-            memset(buf, 0, BUF_SIZE);
-
-            if (llread(buf) == 0){
-                printf("UA received successfully\n");
-                return 1;
+            (void)signal(SIGALRM, alarm_handler);
+            if (start_transmissor(fd) < 0){
+                printf("Could not start TRANSMITTER\n");
+                return -1;
             }
-            
             break;
+            
         case RECEIVER:
             set_role(RECEIVER);
-            unsigned char packet[BUF_SIZE] = {0};
+            (void)signal(SIGALRM, alarm_handler);
 
-            if (llread(packet) == 0)
-                printf("SET received successfully\n");
-
-            unsigned char buf0[BUF_SIZE] = {0};
-
-            buf0[0] = FLAG;
-            buf0[1] = ADDR;
-            buf0[2] = 0x07;
-            buf0[3] = 0x04;
-            buf0[4] = FLAG;
-
-            if (llwrite(buf0, BUF_SIZE)>0){
-                printf("UA sent successfully\n");
-                return 1;
+            if (start_receiver(fd) < 0){
+                printf("Could not start RECEIVER\n");
+                return -1;
             }
             break;
+            
     }
 
-    return -1;
+    printf("Connection open\n");
+    return 1;
+}
+
+int start_receiver(int fd) {
+    unsigned char message[5];
+    if (read_message(fd, message, 5) != 0) 
+        return -1;
+    return send_s_frame(fd, ADDR, 0x07, NO_RESP);
+}
+
+
+int start_transmissor(int fd) {
+    return send_s_frame(fd, ADDR, 0x03, R_UA);
 }
 
 ////////////////////////////////////////////////
 // LLWRITE
 ////////////////////////////////////////////////
 int llwrite(const unsigned char *buf, int bufSize) {
+
+    /*
+    
+    
+    int len = msg_stuff(buf, )
+
     int bytes = write(fd, buf, bufSize);
+
+        
+
+
     printf("%d bytes written\n", bytes);
 
-    // Wait until all bytes have been written to the serial port
-    sleep(1);
     
 
-    return bytes;
+    return bytes;*/
 }
 
 ////////////////////////////////////////////////
 // LLREAD
 ////////////////////////////////////////////////
 int llread(unsigned char *packet) {
+    /*
     int i = 0;
     reset_state();
 
-    while (get_curr_state() != STOP) {
+    while (get_curr_state() != STOP && !get_alarm_flag()) {
+
+        if (i >= BUF_SIZE){
+            continue;
+        }
+
         // Returns after 1 char has been input
         int bytes = read(fd, &packet[i], 1);
 
 
         printf("%x\n", packet[i]);
-        update_state(packet[i]);
+        if (bytes !=-1){
+            update_state(packet[i]);
+        }
 
         i++;
     }
 
+    if (get_curr_state() != STOP) {
+        printf("Failed to get response!\n");
+        return -1;
+    }
 
 
-    return 0;
+
+    return 0;*/
 }
 
 ////////////////////////////////////////////////
@@ -166,6 +185,7 @@ int llread(unsigned char *packet) {
 ////////////////////////////////////////////////
 int llclose(int showStatistics) {
 
+    sleep(1);
     // Restore the old port settings
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
