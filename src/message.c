@@ -80,6 +80,8 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
         return 0;
     } 
 
+    set_command(response);
+
     reset_alarm_count();
 
     reset_state();

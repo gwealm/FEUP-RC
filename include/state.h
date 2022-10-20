@@ -93,6 +93,9 @@ typedef struct {
     // Role
     role curr_role;
 
+    // Currently awaitng command
+    command curr_command
+
 } state_machine;
 
 // Getters
@@ -101,12 +104,14 @@ uint8_t get_control();
 uint8_t get_flag();
 state get_curr_state();
 role get_curr_role();
+command get_curr_command();
 
 // Setters
 void set_address(uint8_t s);
 void set_control(uint8_t s);
 void set_state(state s);
 void set_role(role r);
+void set_command(command c);
 
 /**
  * @brief Updates the State Machine

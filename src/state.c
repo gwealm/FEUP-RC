@@ -21,6 +21,10 @@ role get_curr_role() {
     return state_m.curr_role;
 }
 
+command get_curr_command() {
+    return state_m.curr_command;
+}
+
 void set_address(unsigned char s) {
     state_m.address = s;
 }
@@ -35,6 +39,10 @@ void set_state(state s) {
 
 void set_role(role r) {
     state_m.curr_role = r;
+}
+
+void set_command(command c) {
+    state_m.curr_command = c;
 }
 
 void update_state (unsigned char byte) {
@@ -57,10 +65,10 @@ void update_state (unsigned char byte) {
         case A_RCV:
             if (byte == FLAG) 
                 set_state(FLAG_RCV);
-            else if (byte == 0x03 && get_curr_role() == RECEIVER) {
+            else if (byte == 0x03 && get_curr_command() == CMD_SET) {
                 set_control(byte);
                 set_state(C_RCV);
-            } else if (byte == 0x07 && get_curr_role() == TRANSMITTER) {
+            } else if (byte == 0x07 && get_curr_command() == R_UA) {
                 set_control(byte);
                 set_state(C_RCV);
             } else {

@@ -21,7 +21,6 @@
 
 struct termios oldtio;
 int fd;
-#define BUF_SIZE 16
 
 ////////////////////////////////////////////////
 /// LLOPEN                                   ///   
