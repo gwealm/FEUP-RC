@@ -121,6 +121,23 @@ int start_transmissor(int fd) {
     return send_s_frame(fd, ADDR, 0x03, R_UA);
 }
 
+int close_receiver(int fd) {
+    printf("Disconnecting receiver\n");
+    unsigned char message[5];
+    set_command(CMD_DISC);
+    if (read_message(fd, message, 5) != 0) 
+        return -1;
+    return send_s_frame(fd, ADDR, 0x0B, R_UA);
+}
+
+
+int close_transmissor(int fd) {
+    printf("DISCONNECTING TRANSMITTER...\n");
+    if (send_s_frame(fd, ADDR, 0x0B, CMD_DISC) < 0) 
+        return -1;
+    return send_s_frame(fd, ADDR, 0x07, NO_RESP);
+}
+
 ////////////////////////////////////////////////
 // LLWRITE
 ////////////////////////////////////////////////
@@ -183,6 +200,25 @@ int llread(unsigned char *packet) {
 // LLCLOSE
 ////////////////////////////////////////////////
 int llclose(int showStatistics) {
+
+    switch (get_curr_role()){
+        case TRANSMITTER:
+            if (close_transmissor(fd) < 0){
+                printf("Could not close TRANSMITTER\n");
+                return -1;
+            }
+            break;
+            
+        case RECEIVER:
+            if (close_receiver(fd) < 0){
+                printf("Could not close RECEIVER\n");
+                return -1;
+            }
+            break;
+            
+    }
+
+    printf("Connection closing\n");
 
     sleep(1);
     // Restore the old port settings

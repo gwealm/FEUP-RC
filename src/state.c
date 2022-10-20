@@ -71,6 +71,9 @@ void update_state (unsigned char byte) {
             } else if (byte == 0x07 && get_curr_command() == R_UA) {
                 set_control(byte);
                 set_state(C_RCV);
+            } else if (byte == 0x0B && get_curr_command() == CMD_DISC) {
+                set_control(byte);
+                set_state(C_RCV);
             } else {
                 set_state(START);   
             }
