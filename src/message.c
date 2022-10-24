@@ -5,6 +5,7 @@
 int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
     uint8_t *buffer = (uint8_t*)malloc(5);
     memset(buffer, 0, 5);
+    int bytes;
 
     buffer[0] = FLAG;
     buffer[1] = address;
@@ -12,18 +13,19 @@ int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
     buffer[3] = BCC(buffer[1], buffer[2]);
     buffer[4] = FLAG;
 
-    if (send_message(fd, buffer, 5, response) != 0){
+    if (bytes = send_message(fd, buffer, 5, response) == -1){
         free(buffer);
         return -1;
     }
 
     free(buffer);
-    return 0;
+    return bytes;
 }
 
 int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     int msg_len = data_len + 6; 
     uint8_t *buffer = (uint8_t*)malloc(msg_len);
+    int bytes;
 
     // unsigned char buffer[data_len + 6] = {0};
 
@@ -49,35 +51,33 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     uint8_t stuffed_msg[msg_len * 2];
     msg_len = msg_stuff(buffer, 1, msg_len, stuffed_msg);
     stuffed_msg[msg_len++] = FLAG;
-    /*
-    reset_alarm_count();
-    int ack_received = FALSE;
 
-    while (get_alarm_count() < 3 && !ack_received) {
-        respon 
+    //int ack_received = FALSE;
 
-        alarm_handler();
-    }*/
-
-
-    if (send_message(fd, buffer, msg_len, R_RR) != 0){  // should work for R_REJ as well as R_RR
+    if (bytes = send_message(fd, buffer, msg_len, R_RR_REJ) == -1){  
         free(buffer);
         return -1;
     }
 
-    
-
     free(buffer);
-    return 0;
+
+    if ((packet == 0 && get_prev_response()==RR_1) || (packet == 1 && get_prev_response()==RR_0)){
+        return bytes;
+    }
+
+    // handle REJ
+
+    return bytes;
 }
 
 int send_message(int fd, uint8_t *frame, int msg_size, command response){
+    int bytes;
     if (response == NO_RESP) { // no response expected
-        if (write(fd, frame, msg_size) == -1) {
+        if (bytes = write(fd, frame, msg_size) == -1) {
             printf("Write failed\n");
             return -1;
         }
-        return 0;
+        return bytes;
     } 
 
     set_command(response);
@@ -88,7 +88,7 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
 
     while (get_alarm_count() < 3 && get_curr_state() != STOP) {
         set_alarm_flag(FALSE);
-        if (write(fd, frame, msg_size) == -1){
+        if (bytes = write(fd, frame, msg_size) == -1){
             printf("Write failed\n");
             return -1;
         }
@@ -121,12 +121,13 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
         return -1;
     }
 
-    return 0;
+    return bytes;
 }
 
-int read_message(int fd, uint8_t * buf, int buf_size){
+int read_message(int fd, uint8_t * buf, int buf_size, command response){
     int i = 0;
     reset_state();
+    set_command(response);
 
     while (get_curr_state() != STOP && !get_alarm_flag()){
         if (i >= buf_size){

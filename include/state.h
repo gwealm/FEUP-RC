@@ -17,9 +17,8 @@ typedef enum{
 
     R_UA,
 
-    R_RR,
-
-    R_REJ
+    R_RR_REJ
+    
 } command;
 
 /**
@@ -42,11 +41,13 @@ typedef enum{
     // Unnumbered Acknowledgment (0x07)
     UA,
 
-    // Receiver Ready / Positive ACK (0x05)
-    RR,
+    // Receiver Ready / Positive ACK (RR_0 -> 0x05 / RR_1 -> 0x85)
+    RR_0,
+    RR_1,
 
-    // Reject / Negative ACK (0x01)
-    REJ
+    // Reject / Negative ACK (REJ_0 -> 0x01 / REJ_1 -> 0x81)
+    REJ_0,
+    REJ_1
 } response;
 
 /**
@@ -105,6 +106,7 @@ uint8_t get_flag();
 state get_curr_state();
 role get_curr_role();
 command get_curr_command();
+response get_prev_response();
 
 // Setters
 void set_address(uint8_t s);
@@ -112,6 +114,7 @@ void set_control(uint8_t s);
 void set_state(state s);
 void set_role(role r);
 void set_command(command c);
+void set_reponse(response r);
 
 /**
  * @brief Updates the State Machine

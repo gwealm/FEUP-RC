@@ -21,6 +21,7 @@
 
 struct termios oldtio;
 int fd;
+static uint8_t sequence_number = 0;
 
 ////////////////////////////////////////////////
 /// LLOPEN                                   ///   
@@ -111,7 +112,7 @@ int llopen(LinkLayer connectionParameters) {
 
 int start_receiver(int fd) {
     unsigned char message[5];
-    if (read_message(fd, message, 5) != 0) 
+    if (read_message(fd, message, 5, CMD_SET) != 0) 
         return -1;
     return send_s_frame(fd, ADDR, 0x07, NO_RESP);
 }
@@ -124,8 +125,7 @@ int start_transmissor(int fd) {
 int close_receiver(int fd) {
     printf("Disconnecting receiver\n");
     unsigned char message[5];
-    set_command(CMD_DISC);
-    if (read_message(fd, message, 5) != 0) 
+    if (read_message(fd, message, 5, CMD_DISC) != 0) 
         return -1;
     return send_s_frame(fd, ADDR, 0x0B, R_UA);
 }
@@ -142,22 +142,19 @@ int close_transmissor(int fd) {
 // LLWRITE
 ////////////////////////////////////////////////
 int llwrite(const unsigned char *buf, int bufSize) {
-
-    /*
+    int bytes;
     
-    
-    int len = msg_stuff(buf, )
-
-    int bytes = write(fd, buf, bufSize);
+    if (bytes = send_i_frame(fd, buf, bufSize, sequence_number) == -1){
+        return -1;
+    }
 
         
 
 
     printf("%d bytes written\n", bytes);
-
     
-
-    return bytes;*/
+    sequence_number ^= 0x01; // if 0 -> 1, if 1 -> 0
+    return 1;
 }
 
 ////////////////////////////////////////////////
@@ -182,6 +179,7 @@ int llread(unsigned char *packet) {
         if (bytes !=-1){
             update_state(packet[i]);
         }
+
 
         i++;
     }

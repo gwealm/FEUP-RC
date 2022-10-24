@@ -25,6 +25,10 @@ command get_curr_command() {
     return state_m.curr_command;
 }
 
+response get_prev_response() {
+    return state_m.prev_response;
+}
+
 void set_address(unsigned char s) {
     state_m.address = s;
 }
@@ -43,6 +47,10 @@ void set_role(role r) {
 
 void set_command(command c) {
     state_m.curr_command = c;
+}
+
+void set_response(response r) {
+    state_m.prev_response = r;
 }
 
 void update_state (unsigned char byte) {
@@ -74,6 +82,23 @@ void update_state (unsigned char byte) {
             } else if (byte == 0x0B && get_curr_command() == CMD_DISC) {
                 set_control(byte);
                 set_state(C_RCV);
+            } else if ((byte == 0x05 || byte == 0x85 || byte == 0x01 || byte == 0x81) && get_curr_command() == R_RR_REJ) { 
+                set_control(byte);
+                set_state(C_RCV);   
+                switch (byte){
+                    case 0x05:
+                        set_response(RR_0);
+                        break;
+                    case 0x85:
+                        set_response(RR_1);
+                        break;  
+                    case 0x01:
+                        set_response(REJ_0);
+                        break;
+                    case 0x81:
+                        set_response(REJ_1);
+                        break;       
+                } 
             } else {
                 set_state(START);   
             }
