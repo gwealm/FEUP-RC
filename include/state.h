@@ -66,10 +66,11 @@ typedef enum {
     // Control Received State
     C_RCV,
 
-    CDISCARD,
-
     // BCC Verification Passed State
     BCC_OK,
+
+    // Receiving Data State
+    RCV_DATA,
 
     // Stop State
     STOP

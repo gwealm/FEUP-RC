@@ -148,10 +148,9 @@ int llwrite(const unsigned char *buf, int bufSize) {
         return -1;
     }
 
-        
+    
 
-
-    printf("%d bytes written\n", bytes);
+    printf("llwrite: %d bytes written\n", bytes);
     
     sequence_number ^= 0x01; // if 0 -> 1, if 1 -> 0
     return 1;
@@ -161,6 +160,27 @@ int llwrite(const unsigned char *buf, int bufSize) {
 // LLREAD
 ////////////////////////////////////////////////
 int llread(unsigned char *packet) {
+
+    int packet_size = 0;
+    char *buf;
+
+    int bytes;
+
+
+    if (bytes = read_message(fd, buf, MSG_MAX_SIZE, CMD_DATA) != 0)
+        return -1;
+
+    uint8_t *destuffed_msg;
+
+    int msg_size;
+    
+    if ((msg_size = msg_destuff(buf, 5, MSG_MAX_SIZE, destuffed_msg)) < 0) {
+        printf("Read failed\n");
+        return -1;
+    }
+
+    
+
     /*
     int i = 0;
     reset_state();

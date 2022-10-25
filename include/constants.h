@@ -24,5 +24,7 @@
 #define CTRL_RR(r) ((r == 0) ? 0x05 : 0x85)
 #define CTRL_REJ(r) ((r==0) ? 0x01 :0x81)
 
+#define MSG_MAX_SIZE 1000
+
 
 #define NO_RESP -1
