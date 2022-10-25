@@ -33,7 +33,7 @@ int msg_stuff(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg) {
         ++i;
     }
 
-    return msg_size;    
+    return i;    
 }
 
 int msg_destuff(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg) {
@@ -48,11 +48,11 @@ int msg_destuff(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg
             j++;
         }
         else {
-            destuffed_msg[msg_size++] = buffer[j];
+            destuffed_msg[i++] = buffer[j];
         }
     }
 
-    return msg_size;
+    return i;
 }
 
 char *get_filename_from_path(char *path) {

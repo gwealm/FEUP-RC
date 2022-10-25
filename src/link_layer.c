@@ -174,44 +174,21 @@ int llread(unsigned char *packet) {
 
     int msg_size;
     
-    if ((msg_size = msg_destuff(buf, 5, MSG_MAX_SIZE, destuffed_msg)) < 0) {
+    if ((msg_size = msg_destuff(buf, 4, bytes, destuffed_msg)) < 0) {
         printf("Read failed\n");
         return -1;
     }
 
-    
+    unsigned char rcv_bcc2 = destuffed_msg[bytes-2]; 
+    unsigned char bcc2 = generate_bcc2(destuffed_msg+4, msg_size-6) // data and data length (check these args)
 
-    /*
-    int i = 0;
-    reset_state();
+    // case correct bcc2 and correct sequence_number
 
-    while (get_curr_state() != STOP && !get_alarm_flag()) {
+    // case correct bcc2 and incorrect sequence_number (ignore)
 
-        if (i >= BUF_SIZE){
-            continue;
-        }
+    // case incorrect bcc2 (reject)
 
-        // Returns after 1 char has been input
-        int bytes = read(fd, &packet[i], 1);
-
-
-        printf("%x\n", packet[i]);
-        if (bytes !=-1){
-            update_state(packet[i]);
-        }
-
-
-        i++;
-    }
-
-    if (get_curr_state() != STOP) {
-        printf("Failed to get response!\n");
-        return -1;
-    }
-
-
-
-    return 0;*/
+    return 1;
 }
 
 ////////////////////////////////////////////////
