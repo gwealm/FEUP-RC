@@ -19,7 +19,7 @@ int msg_stuff(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg) {
 
     // Copy header without stuffing
     for (int j = 0; j < start; ++j, ++i)
-        stuffed_msg[i] = buffer[j];
+        stuffed_msg[i] = buffer[j];   
 
     // Stuffing 
     for (int j = start; j < msg_size; ++j) {
@@ -32,7 +32,6 @@ int msg_stuff(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg) {
         }
         ++i;
     }
-
     return i;    
 }
 
@@ -48,7 +47,8 @@ int msg_destuff(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg
             j++;
         }
         else {
-            destuffed_msg[i++] = buffer[j];
+            destuffed_msg[i] = buffer[j];
+            i++;
         }
     }
 

@@ -57,7 +57,7 @@ int llopen(LinkLayer connectionParameters) {
     // Set input mode (non-canonical, no echo,...)
     newtio.c_lflag = 0;
     newtio.c_cc[VTIME] = 0; // Inter-character timer unused
-    switch (connectionParameters.role){
+    switch (connectionParameters.role) {
         case TRANSMITTER:
             newtio.c_cc[VMIN] = 0;  // Blocking read until n chars received
             newtio.c_cc[VTIME] = connectionParameters.timeout; // Inter-character timer unused
@@ -84,7 +84,7 @@ int llopen(LinkLayer connectionParameters) {
 
     printf("New termios structure set\n");
 
-    switch (connectionParameters.role){
+    switch (connectionParameters.role) {
         case TRANSMITTER:
             set_role(TRANSMITTER);
             (void)signal(SIGALRM, alarm_handler);
@@ -112,7 +112,7 @@ int llopen(LinkLayer connectionParameters) {
 
 int start_receiver(int fd) {
     unsigned char message[5];
-    if (read_message(fd, message, 5, CMD_SET) != 0) 
+    if (read_message(fd, message, 5, CMD_SET) < 0) 
         return -1;
     return send_s_frame(fd, ADDR, 0x07, NO_RESP);
 }
@@ -125,7 +125,7 @@ int start_transmissor(int fd) {
 int close_receiver(int fd) {
     printf("Disconnecting receiver\n");
     unsigned char message[5];
-    if (read_message(fd, message, 5, CMD_DISC) != 0) 
+    if (read_message(fd, message, 5, CMD_DISC) < 0) 
         return -1;
     return send_s_frame(fd, ADDR, 0x0B, R_UA);
 }
@@ -144,7 +144,7 @@ int close_transmissor(int fd) {
 int llwrite(const unsigned char *buf, int bufSize) {
     int bytes;
     
-    if (bytes = send_i_frame(fd, buf, bufSize, sequence_number) == -1){
+    if ((bytes = send_i_frame(fd, buf, bufSize, sequence_number)) == -1) {
         return -1;
     }
 
@@ -153,7 +153,7 @@ int llwrite(const unsigned char *buf, int bufSize) {
     printf("llwrite: %d bytes written\n", bytes);
     
     sequence_number ^= 0x01; // if 0 -> 1, if 1 -> 0
-    return 1;
+    return bytes;
 }
 
 ////////////////////////////////////////////////
@@ -162,33 +162,52 @@ int llwrite(const unsigned char *buf, int bufSize) {
 int llread(unsigned char *packet) {
 
     int packet_size = 0;
-    char *buf;
+    unsigned char *buf = (unsigned char *) malloc(MSG_MAX_SIZE);
 
-    int bytes;
+    int read_bytes = 0;
 
 
-    if (bytes = read_message(fd, buf, MSG_MAX_SIZE, CMD_DATA) != 0)
+    if ((read_bytes = read_message(fd, buf, MSG_MAX_SIZE, CMD_DATA)) < 0)
         return -1;
 
-    uint8_t *destuffed_msg;
+    uint8_t *destuffed_msg = (uint8_t *) malloc(MSG_MAX_SIZE);
 
     int msg_size;
     
-    if ((msg_size = msg_destuff(buf, 4, bytes, destuffed_msg)) < 0) {
+    if ((msg_size = msg_destuff(buf, 4, read_bytes, destuffed_msg)) < 0) {
         printf("Read failed\n");
         return -1;
     }
 
-    unsigned char rcv_bcc2 = destuffed_msg[bytes-2]; 
-    unsigned char bcc2 = generate_bcc2(destuffed_msg+4, msg_size-6) // data and data length (check these args)
+    free(buf);
+
+    printf("bytes: %d\n", read_bytes);
+    printf("destuff size: %d\2\n", msg_size);
+    unsigned char rcv_bcc2 = destuffed_msg[msg_size-2];
+    printf("rcv_bcc2: %d\n", rcv_bcc2);
+    unsigned char bcc2 = generate_bcc2(destuffed_msg+4, msg_size-6); // data and data length (check these args)
+    printf("bcc2: %d\n", bcc2);
 
     // case correct bcc2 and correct sequence_number
+    if ((rcv_bcc2==bcc2) && ((get_control()==0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1))) { // rewrite condition
+        send_s_frame(fd, ADDR, 0x05 | (sequence_number << 7), NO_RESP);
+        memcpy(packet, destuffed_msg, msg_size);
+        free(destuffed_msg);
+        sequence_number ^= 0x01;
+        return 1;
+    }
 
     // case correct bcc2 and incorrect sequence_number (ignore)
+    if ((rcv_bcc2==bcc2)) {
+        send_s_frame(fd, ADDR, 0x05 | ((sequence_number^0x01) << 7), NO_RESP); // accept wrong sequence number (duplicate) 
+        free(destuffed_msg);
+        return -1;
+    }
 
     // case incorrect bcc2 (reject)
-
-    return 1;
+    send_s_frame(fd, ADDR, 0x01 | (sequence_number << 7), NO_RESP);
+    free(destuffed_msg);
+    return -1;
 }
 
 ////////////////////////////////////////////////
@@ -198,14 +217,14 @@ int llclose(int showStatistics) {
 
     switch (get_curr_role()){
         case TRANSMITTER:
-            if (close_transmissor(fd) < 0){
+            if (close_transmissor(fd) < 0) {
                 printf("Could not close TRANSMITTER\n");
                 return -1;
             }
             break;
             
         case RECEIVER:
-            if (close_receiver(fd) < 0){
+            if (close_receiver(fd) < 0) {
                 printf("Could not close RECEIVER\n");
                 return -1;
             }

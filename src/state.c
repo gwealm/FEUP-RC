@@ -82,7 +82,7 @@ void update_state (unsigned char byte) {
             } else if (byte == 0x0B && get_curr_command() == CMD_DISC) {
                 set_control(byte);
                 set_state(C_RCV);
-            } else if ((byte == 0x00 || byte = 0x40) && get_curr_command() == CMD_DATA) {
+            } else if ((byte == 0x00 || byte == 0x40) && get_curr_command() == CMD_DATA) {
                 set_control(byte);
                 set_state(C_RCV);    
             } else if ((byte == 0x05 || byte == 0x85 || byte == 0x01 || byte == 0x81) && get_curr_command() == R_RR_REJ) { 
@@ -127,6 +127,7 @@ void update_state (unsigned char byte) {
         case RCV_DATA:
             if (byte == FLAG) 
                 set_state(STOP);
+            break;    
         case STOP:
             break;
     }

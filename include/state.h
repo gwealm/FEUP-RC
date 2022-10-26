@@ -12,7 +12,6 @@ typedef enum{
     // Disconnect (0x0B)
     CMD_DISC,
 
-
     CMD_DATA,
 
     R_UA,
