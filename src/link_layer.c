@@ -181,12 +181,14 @@ int llread(unsigned char *packet) {
 
     free(buf);
 
+    for (int a = 0; a < msg_size; a++){printf("destuffed -> %x\n", destuffed_msg[a]);}
+
     printf("bytes: %d\n", read_bytes);
     printf("destuff size: %d\2\n", msg_size);
     unsigned char rcv_bcc2 = destuffed_msg[msg_size-2];
-    printf("rcv_bcc2: %d\n", rcv_bcc2);
+    printf("rcv_bcc2: %x\n", rcv_bcc2);
     unsigned char bcc2 = generate_bcc2(destuffed_msg+4, msg_size-6); // data and data length (check these args)
-    printf("bcc2: %d\n", bcc2);
+    printf("bcc2: %x\n", bcc2);
 
     // case correct bcc2 and correct sequence_number
     if ((rcv_bcc2==bcc2) && ((get_control()==0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1))) { // rewrite condition

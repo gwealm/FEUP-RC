@@ -20,17 +20,15 @@ int msg_stuff(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg) {
     // Copy header without stuffing
     for (int j = 0; j < start; ++j, ++i)
         stuffed_msg[i] = buffer[j];   
-
     // Stuffing 
     for (int j = start; j < msg_size; ++j) {
         if (buffer[j] == FLAG || buffer[j] == ESCAPE) {
-            stuffed_msg[i] = ESCAPE;
-            ++i;
-            stuffed_msg[i] = buffer[i] ^ 0x20;
+            stuffed_msg[i++] = ESCAPE;
+            stuffed_msg[i++] = buffer[j] ^ 0x20;
         } else {
-            stuffed_msg[i] = buffer[i];
+            stuffed_msg[i++] = buffer[j];
         }
-        ++i;
+        printf("i: %d    j: %d\n", i, j);
     }
     return i;    
 }
@@ -45,6 +43,7 @@ int msg_destuff(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg
         if (buffer[j] == ESCAPE) {
             destuffed_msg[i] = buffer[j + 1] ^ 0x20;
             j++;
+            i++;
         }
         else {
             destuffed_msg[i] = buffer[j];

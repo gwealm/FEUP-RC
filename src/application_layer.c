@@ -38,7 +38,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
     switch (ll.role){
         int a;
         case TRANSMITTER:
-            unsigned char buffer[4] = {0x05, 0x0d, 0x02, 0x01};
+            unsigned char buffer[4] = {0x05, 0x0d, 0x02, 0x7e};
             a = llwrite(buffer, 4);
             if (a < 0)
                 printf("Sadge. Huge error, llwrite didn't return :(((\n");

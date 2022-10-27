@@ -50,7 +50,7 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     
 
     uint8_t stuffed_msg[msg_len * 2];
-    msg_len = msg_stuff(buffer, 1, msg_len, stuffed_msg);
+    msg_len = msg_stuff(buffer, 4, msg_len, stuffed_msg);
     stuffed_msg[msg_len] = FLAG;
     msg_len++;
     printf("len: %d\n", msg_len);
