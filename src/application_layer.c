@@ -54,7 +54,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                 return -1;
             }
 
-            // send start packet (abstract to dedicated function or similar)
+            // send start packet (abstract to dedicated function or similar), possibly define some macros
             int l1 = sizeof(file_stat.st_size);
             int l2 = strlen(filename);
             int start_size = 5 + l1 + l2;
@@ -76,13 +76,14 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
 
 
-            // send file info
+            // send file info (loop through file contents to fit MSG_MAX_SIZE (packets should have at most size MSG_MAX_SIZE-6))
+            /*
             unsigned char buffer[6] = {0x01, 0x0d, 0x02, 0x7e, 0x50, 0x05};
             res = llwrite(buffer, 6);
             if (res < 0)
                 printf("Sadge. Huge error, llwrite didn't return :(((\n");
             printf ("llwrite return %d :)))\n", res);
-
+            */
 
 
             // send end packet (abstract to dedicated function or similar)
@@ -116,7 +117,25 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                     printf("Sadge. Huge error, llread didn't return :(((\n");
 
                 printf ("llrread return %d :)))\n", res);
-            } while (buf[4]!=3);    
+                if (buf[4]!=1 && buf[4]!=2 && buf[4]!=3){
+                    printf ("Received an invalid packet :(((\n");
+                    return;
+                }
+            } while (buf[4]!=1);
+            // parse control packet (start packet)    
+            do{
+                res = llread(buf);
+                if (res < 0)
+                    printf("Sadge. Huge error, llread didn't return :(((\n");
+
+                printf ("llrread return %d :)))\n", res);
+                if (buf[4]!=1 && buf[4]!=2 && buf[4]!=3){
+                    printf ("Received an invalid packet :(((\n");
+                    return;
+                }
+                // parse data packet 
+            } while (buf[4]!=3);  
+            // parse control packet (end packet)    
             
     }
 

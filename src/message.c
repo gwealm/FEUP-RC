@@ -67,7 +67,7 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
 
     // handle REJ
 
-    return bytes;
+    return -1;
 }
 
 int send_message(int fd, uint8_t *frame, int msg_size, command response){
