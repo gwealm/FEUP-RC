@@ -107,7 +107,7 @@ int llopen(LinkLayer connectionParameters) {
     }
 
     printf("Connection open\n");
-    return 1;
+    return fd;
 }
 
 int start_receiver(int fd) {
@@ -180,8 +180,6 @@ int llread(unsigned char *packet) {
     }
 
     free(buf);
-
-    for (int a = 0; a < msg_size; a++){printf("destuffed -> %x\n", destuffed_msg[a]);}
 
     printf("bytes: %d\n", read_bytes);
     printf("destuff size: %d\2\n", msg_size);

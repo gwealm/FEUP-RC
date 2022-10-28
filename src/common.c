@@ -28,7 +28,6 @@ int msg_stuff(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg) {
         } else {
             stuffed_msg[i++] = buffer[j];
         }
-        printf("i: %d    j: %d\n", i, j);
     }
     return i;    
 }

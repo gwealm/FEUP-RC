@@ -53,8 +53,6 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     msg_len = msg_stuff(buffer, 4, msg_len, stuffed_msg);
     stuffed_msg[msg_len] = FLAG;
     msg_len++;
-    printf("len: %d\n", msg_len);
-    //int ack_received = FALSE;
 
     if ((bytes = send_message(fd, stuffed_msg, msg_len, R_RR_REJ)) == -1){  
         free(buffer);
