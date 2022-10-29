@@ -191,10 +191,10 @@ int llread(unsigned char *packet) {
     // case correct bcc2 and correct sequence_number
     if ((rcv_bcc2==bcc2) && ((get_control()==0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1))) { // rewrite condition
         send_s_frame(fd, ADDR, 0x05 | ((sequence_number^0x01) << 7), NO_RESP);
-        memcpy(packet, destuffed_msg, msg_size);
+        memcpy(packet, destuffed_msg+4, msg_size-6); // only copy data to packet
         free(destuffed_msg);
         sequence_number ^= 0x01;
-        return 1;
+        return msg_size-6; // return size of data 
     }
 
     // case correct bcc2 and incorrect sequence_number (ignore)
