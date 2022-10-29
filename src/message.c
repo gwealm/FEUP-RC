@@ -66,6 +66,10 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     }
 
     // handle REJ
+    if ((packet == 0 && get_prev_response()==REJ_1) || (packet == 1 && get_prev_response()==REJ_0)){
+        printf("Invalid message received and rejected\n");
+        return -1;
+    }
 
     return -1;
 }
