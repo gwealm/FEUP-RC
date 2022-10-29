@@ -54,13 +54,10 @@ int msg_destuff(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg
 }
 
 char *get_filename_from_path(char *path) {
-    int len = strlen(path);
-    char *filename = path;
-
-    for (size_t i = len - 1; i > 0; --i) {
-        filename = filename + i + 1;
-        break;
+    char* filename = path, *p;
+    for (p = path; *p; p++) {
+        if (*p == '/' || *p == ':' || *p == '\\')
+            filename = p;
     }
-
-    return path;
+    return filename;
 }

@@ -2,6 +2,26 @@
 
 #define MAX_BUF_SIZE 16
 
+unsigned int get_data_packet(unsigned char *data, unsigned int data_size, unsigned int counter) {
+    unsigned char packet[MAX_BUF_SIZE] = {0};
+
+    int l1 = data_size / 256;
+    int l2 = data_size % 256;
+
+    packet[0] = 2;
+    packet[1] = counter % 255;
+    packet[2] = l1;
+    packet[3] = l2;
+
+    for (int i = 0; i < data_size; ++i)
+        packet[i+4] = data[i];
+    
+    for (int j = 0; j < (data_size + 4); ++j)
+        data[j] = packet[j];
+
+    return data_size + 4;
+}
+
 int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
     uint8_t *buffer = (uint8_t*)malloc(5);
     memset(buffer, 0, 5);

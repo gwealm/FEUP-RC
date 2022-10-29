@@ -4,17 +4,37 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #include "application_layer.h"
 #include "link_layer.h"
 #include "state.h"
 #include "constants.h"
 
-int parse_packet(unsigned char * buffer, int buffer_size){
+int parse_packet(unsigned char * buffer, int buffer_size, const char * file_path){
+    static int dest_file_fd;
     switch(buffer[0]){
         case 1:
+            unsigned data_size = buffer[3] + 256 * buffer[2];
+            if (write(dest_file_fd, &buffer[4], data_size) < 0){
+                printf("Couldn't write to destination file\n");
+                return -1;
+            }
+            return 0;
         case 2:
+            if ((dest_file_fd = open(file_path, O_WRONLY | O_CREAT, 0777)) < 0){
+                printf("Couldn't open destination file\n");
+                return -1;
+            }
+            // read size for checking at end
+            return 0;
         case 3:
+            if (close(dest_file_fd) < 0){
+                printf("Couldn't close destination file\n");
+                return -1;
+            }
+            // maybe check file size here
+            return 0;
         default:
             printf("Invalid packet received\n");
             return -1;
@@ -157,7 +177,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
 
             // parse control packet (start packet) 
-            if(parse_packet(buf, res)<0){
+            if(parse_packet(buf, res, filename)<0){
                 return;
             }
 
@@ -169,7 +189,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                 } 
                 printf ("llrread return %d :)))\n", res);
                 // parse packet
-                if(parse_packet(buf, res)<0){
+                if(parse_packet(buf, res, filename)<0){
                     return;
                 } 
                   
