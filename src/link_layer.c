@@ -162,12 +162,12 @@ int llwrite(const unsigned char *buf, int bufSize) {
 int llread(unsigned char *packet) {
 
     int packet_size = 0;
-    unsigned char *buf = (unsigned char *) malloc(MSG_MAX_SIZE);
+    unsigned char *buf = (unsigned char *) malloc(MSG_MAX_SIZE*2);
 
     int read_bytes = 0;
 
 
-    if ((read_bytes = read_message(fd, buf, MSG_MAX_SIZE, CMD_DATA)) < 0)
+    if ((read_bytes = read_message(fd, buf, MSG_MAX_SIZE*2, CMD_DATA)) < 0)
         return -1;
 
     uint8_t *destuffed_msg = (uint8_t *) malloc(MSG_MAX_SIZE);
@@ -190,7 +190,7 @@ int llread(unsigned char *packet) {
 
     // case correct bcc2 and correct sequence_number
     if ((rcv_bcc2==bcc2) && ((get_control()==0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1))) { // rewrite condition
-        send_s_frame(fd, ADDR, 0x05 | (sequence_number << 7), NO_RESP);
+        send_s_frame(fd, ADDR, 0x05 | ((sequence_number^0x01) << 7), NO_RESP);
         memcpy(packet, destuffed_msg, msg_size);
         free(destuffed_msg);
         sequence_number ^= 0x01;
@@ -199,13 +199,13 @@ int llread(unsigned char *packet) {
 
     // case correct bcc2 and incorrect sequence_number (ignore)
     if ((rcv_bcc2==bcc2)) {
-        send_s_frame(fd, ADDR, 0x05 | ((sequence_number^0x01) << 7), NO_RESP); // accept wrong sequence number (duplicate) 
+        send_s_frame(fd, ADDR, 0x05 | (sequence_number << 7), NO_RESP); // accept wrong sequence number (duplicate) 
         free(destuffed_msg);
         return -1;
     }
 
     // case incorrect bcc2 (reject)
-    send_s_frame(fd, ADDR, 0x01 | (sequence_number << 7), NO_RESP);
+    send_s_frame(fd, ADDR, 0x01 | ((sequence_number^0x01) << 7), NO_RESP);
     free(destuffed_msg);
     return -1;
 }

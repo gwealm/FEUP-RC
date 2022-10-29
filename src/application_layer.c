@@ -86,6 +86,31 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
             */
 
 
+            
+            unsigned char msg[MSG_MAX_SIZE - 6]; // should have macro for this
+            unsigned send_bytes;
+            unsigned packet_number = 0;
+
+            while ((send_bytes = read(file_fd, msg, MSG_MAX_SIZE - 10)) > 0) {  // accounts for header and packet info
+                unsigned char data_packet[MSG_MAX_SIZE - 6];
+                data_packet[0] = 1; // data
+                data_packet[1] = packet_number % 255;
+                data_packet[2] = (send_bytes / 256);
+                data_packet[3] = (send_bytes % 256);
+                memcpy(&data_packet[4], msg, send_bytes);
+
+                if (llwrite(data_packet, send_bytes+4) <0){ 
+                    printf("Sadge. Huge error, llwrite didn't return :((( data packet btw\n");
+                    return;
+                }
+                printf("Sent packet %d\n", packet_number);
+
+
+                packet_number++;
+            }
+
+
+
             // send end packet (abstract to dedicated function or similar)
             l1 = sizeof(file_stat.st_size);
             l2 = strlen(filename);
@@ -113,27 +138,30 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
             unsigned char buf[MSG_MAX_SIZE] = {0};
             do{
                 res = llread(buf);
-                if (res < 0)
+                if (res < 0){
                     printf("Sadge. Huge error, llread didn't return :(((\n");
-
+                    continue;
+                }
                 printf ("llrread return %d :)))\n", res);
                 if (buf[4]!=1 && buf[4]!=2 && buf[4]!=3){
                     printf ("Received an invalid packet :(((\n");
                     return;
                 }
-            } while (buf[4]!=1);
+            } while (buf[4]!=2);
             // parse control packet (start packet)    
             do{
                 res = llread(buf);
-                if (res < 0)
+                if (res < 0){
                     printf("Sadge. Huge error, llread didn't return :(((\n");
-
-                printf ("llrread return %d :)))\n", res);
+                    continue;
+                } else {
+                    printf ("llrread return %d :)))\n", res);
+                    // parse data packet 
+                }    
                 if (buf[4]!=1 && buf[4]!=2 && buf[4]!=3){
                     printf ("Received an invalid packet :(((\n");
                     return;
                 }
-                // parse data packet 
             } while (buf[4]!=3);  
             // parse control packet (end packet)    
             
