@@ -19,7 +19,6 @@
 // included by <termios.h>
 #define BAUDRATE B38400
 
-
 #define BUF_SIZE 2048
 
 typedef enum

@@ -5,7 +5,8 @@
 /**
  * @brief Control Bit Options for Emissor
  */
-typedef enum{
+typedef enum
+{
     // Set up (0x03)
     CMD_SET,
 
@@ -17,23 +18,25 @@ typedef enum{
     R_UA,
 
     R_RR_REJ
-    
+
 } command;
 
 /**
  * @brief Machine Role Options
  */
-typedef enum{
+typedef enum
+{
 
     TRANSMITTER,
-    
+
     RECEIVER
 } role;
 
 /**
  * @brief Control Bit Options for Receiver
  */
-typedef enum{
+typedef enum
+{
 
     R_NULL,
 
@@ -52,7 +55,8 @@ typedef enum{
 /**
  * @brief Possible states for the state machine
  */
-typedef enum {
+typedef enum
+{
     // Starting State
     START,
 
@@ -78,7 +82,8 @@ typedef enum {
 /**
  * @brief Represents a State Machine
  */
-typedef struct {
+typedef struct
+{
     // Current State
     state curr_state;
 
@@ -95,7 +100,7 @@ typedef struct {
     role curr_role;
 
     // Currently awaitng command
-    command curr_command
+    command curr_command;
 
 } state_machine;
 
@@ -118,8 +123,8 @@ void set_reponse(response r);
 
 /**
  * @brief Updates the State Machine
- * 
- * @param byte 
+ *
+ * @param byte
  */
 void update_state(uint8_t byte);
 

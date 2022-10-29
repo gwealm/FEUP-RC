@@ -1,12 +1,11 @@
 #pragma once
 
-
 #define FLAG 0x7E
 #define ESCAPE 0x7d
 #define ADDR 0x03
 
-//#define TRANSMITTER 0
-//#define RECEIVER 1
+// #define TRANSMITTER 0
+// #define RECEIVER 1
 
 #define TRUE 1
 #define FALSE 0
@@ -22,9 +21,8 @@
 #define CTRL_DISC 0x0B
 #define CTRL_UA 0x07
 #define CTRL_RR(r) ((r == 0) ? 0x05 : 0x85)
-#define CTRL_REJ(r) ((r==0) ? 0x01 :0x81)
+#define CTRL_REJ(r) ((r == 0) ? 0x01 : 0x81)
 
 #define MSG_MAX_SIZE 1000
-
 
 #define NO_RESP -1

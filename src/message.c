@@ -1,8 +1,13 @@
 #include "message.h"
+#include "alarm.h"
+#include "common.h"
+
+#include <unistd.h>
 
 #define MAX_BUF_SIZE 16
 
-unsigned int get_data_packet(unsigned char *data, unsigned int data_size, unsigned int counter) {
+unsigned int get_data_packet(unsigned char *data, unsigned int data_size, unsigned int counter)
+{
     unsigned char packet[MAX_BUF_SIZE] = {0};
 
     int l1 = data_size / 256;
@@ -14,16 +19,17 @@ unsigned int get_data_packet(unsigned char *data, unsigned int data_size, unsign
     packet[3] = l2;
 
     for (int i = 0; i < data_size; ++i)
-        packet[i+4] = data[i];
-    
+        packet[i + 4] = data[i];
+
     for (int j = 0; j < (data_size + 4); ++j)
         data[j] = packet[j];
 
     return data_size + 4;
 }
 
-int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
-    uint8_t *buffer = (uint8_t*)malloc(5);
+int send_s_frame(int fd, uint8_t address, uint8_t control, command response)
+{
+    uint8_t *buffer = (uint8_t *)malloc(5);
     memset(buffer, 0, 5);
     int bytes;
 
@@ -33,7 +39,8 @@ int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
     buffer[3] = BCC(buffer[1], buffer[2]);
     buffer[4] = FLAG;
 
-    if ((bytes = send_message(fd, buffer, 5, response)) == -1){
+    if ((bytes = send_message(fd, buffer, 5, response)) == -1)
+    {
         free(buffer);
         return -1;
     }
@@ -42,9 +49,10 @@ int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
     return bytes;
 }
 
-int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
-    int msg_len = data_len + 5; 
-    uint8_t *buffer = (uint8_t*)malloc(msg_len);
+int send_i_frame(int fd, const uint8_t *data, int data_len, int packet)
+{
+    int msg_len = data_len + 5;
+    uint8_t *buffer = (uint8_t *)malloc(msg_len);
     int bytes;
 
     // unsigned char buffer[data_len + 6] = {0};
@@ -57,36 +65,39 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     buffer[1] = ADDR_E;
     //(get_curr_role() == RECEIVER) ? 0x03 : 0x01;
     buffer[2] = (packet << 6);
-    
+
     buffer[3] = BCC(buffer[1], buffer[2]);
 
     uint8_t bcc2 = 0;
-    for (int i = 0; i < data_len; i++) {
+    for (int i = 0; i < data_len; i++)
+    {
         buffer[i + 4] = data[i];
         bcc2 ^= data[i];
     }
 
     buffer[data_len + 4] = bcc2;
-    
 
     uint8_t stuffed_msg[msg_len * 2];
     msg_len = msg_stuff(buffer, 4, msg_len, stuffed_msg);
     stuffed_msg[msg_len] = FLAG;
     msg_len++;
 
-    if ((bytes = send_message(fd, stuffed_msg, msg_len, R_RR_REJ)) == -1){  
+    if ((bytes = send_message(fd, stuffed_msg, msg_len, R_RR_REJ)) == -1)
+    {
         free(buffer);
         return -1;
     }
 
     free(buffer);
 
-    if ((packet == 0 && get_prev_response()==RR_1) || (packet == 1 && get_prev_response()==RR_0)){
+    if ((packet == 0 && get_prev_response() == RR_1) || (packet == 1 && get_prev_response() == RR_0))
+    {
         return bytes;
     }
 
     // handle REJ
-    if ((packet == 0 && get_prev_response()==REJ_1) || (packet == 1 && get_prev_response()==REJ_0)){
+    if ((packet == 0 && get_prev_response() == REJ_1) || (packet == 1 && get_prev_response() == REJ_0))
+    {
         printf("Invalid message received and rejected\n");
         return -1;
     }
@@ -94,15 +105,18 @@ int send_i_frame(int fd, uint8_t *data, int data_len, int packet) {
     return -1;
 }
 
-int send_message(int fd, uint8_t *frame, int msg_size, command response){
+int send_message(int fd, uint8_t *frame, int msg_size, command response)
+{
     int bytes;
-    if (response == NO_RESP) { // no response expected
-        if ((bytes = write(fd, frame, msg_size)) == -1) {
+    if (response == NO_RESP)
+    { // no response expected
+        if ((bytes = write(fd, frame, msg_size)) == -1)
+        {
             printf("Write failed\n");
             return -1;
         }
         return bytes;
-    } 
+    }
 
     set_command(response);
 
@@ -110,9 +124,11 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
 
     reset_state();
 
-    while (get_alarm_count() < 3 && get_curr_state() != STOP) {
+    while (get_alarm_count() < 3 && get_curr_state() != STOP)
+    {
         set_alarm_flag(FALSE);
-        if ((bytes = write(fd, frame, msg_size)) == -1){
+        if ((bytes = write(fd, frame, msg_size)) == -1)
+        {
             printf("Write failed\n");
             return -1;
         }
@@ -123,24 +139,26 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
         alarm(3);
 
         int i = 0;
-        
 
-        while (get_curr_state() != STOP && !get_alarm_flag()){
-            if (i >= MAX_BUF_SIZE){
+        while (get_curr_state() != STOP && !get_alarm_flag())
+        {
+            if (i >= MAX_BUF_SIZE)
+            {
                 continue;
             }
             int read_byte = read(fd, buf + i, 1);
 
             printf("%x\n", buf[i]);
-            if (read_byte !=-1){
+            if (read_byte != -1)
+            {
                 update_state(buf[i]);
             }
             i++;
         }
-
     }
 
-    if (get_curr_state() != STOP) {
+    if (get_curr_state() != STOP)
+    {
         printf("Failed to get response!\n");
         return -1;
     }
@@ -148,27 +166,31 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response){
     return bytes;
 }
 
-int read_message(int fd, uint8_t * buf, int buf_size, command response){
+int read_message(int fd, uint8_t *buf, int buf_size, command response)
+{
     int i = 0;
     reset_state();
     set_command(response);
 
-    while (get_curr_state() != STOP && !get_alarm_flag()){
-        if (i >= buf_size){
+    while (get_curr_state() != STOP && !get_alarm_flag())
+    {
+        if (i >= buf_size)
+        {
             break;
         }
         int bytes = read(fd, buf + i, 1);
 
-
         printf("received -> %x\n", buf[i]);
-        if (bytes !=-1){
+        if (bytes != -1)
+        {
             update_state(buf[i]);
-        }  
+        }
 
         i++;
     }
 
-    if (get_curr_state() != STOP) {
+    if (get_curr_state() != STOP)
+    {
         printf("Failed to get response!\n");
         return -1;
     }
