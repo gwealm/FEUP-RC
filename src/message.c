@@ -82,23 +82,30 @@ int send_i_frame(int fd, const uint8_t *data, int data_len, int packet)
     stuffed_msg[msg_len] = FLAG;
     msg_len++;
 
-    if ((bytes = send_message(fd, stuffed_msg, msg_len, R_RR_REJ)) == -1)
-    {
-        free(buffer);
-        return -1;
-    }
-
     free(buffer);
+    int w = 0;
 
-    if ((packet == 0 && get_prev_response() == RR_1) || (packet == 1 && get_prev_response() == RR_0))
-    {
-        return bytes;
-    }
+    while(w<3){
+        if ((bytes = send_message(fd, stuffed_msg, msg_len, R_RR_REJ)) == -1)
+        {
+            printf("Failed to send message correctly\n");
+            return -1;
+        }
 
-    // handle REJ
-    if ((packet == 0 && get_prev_response() == REJ_1) || (packet == 1 && get_prev_response() == REJ_0))
-    {
-        printf("Invalid message received and rejected\n");
+
+        if ((packet == 0 && get_prev_response() == RR_1) || (packet == 1 && get_prev_response() == RR_0))
+        {
+            printf("Sent message and received positive acknowledgement\n");
+            return bytes;
+        }
+
+        // handle REJ
+        if ((packet == 0 && get_prev_response() == REJ_1) || (packet == 1 && get_prev_response() == REJ_0))
+        {
+            printf("Invalid message sent and rejected\n");
+            w++;
+            continue;
+        }
         return -1;
     }
 
@@ -180,7 +187,7 @@ int read_message(int fd, uint8_t *buf, int buf_size, command response)
         }
         int bytes = read(fd, buf + i, 1);
 
-        printf("received -> %x\n", buf[i]);
+        //printf("received -> %x\n", buf[i]);
         if (bytes != -1)
         {
             update_state(buf[i]);

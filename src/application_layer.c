@@ -128,7 +128,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         { // accounts for header and packet info
             unsigned char data_packet[MSG_MAX_SIZE - 6];
             data_packet[0] = 1; // data
-            data_packet[1] = packet_number % 255;
+            data_packet[1] = packet_number % 256;
             data_packet[2] = (send_bytes / 256);
             data_packet[3] = (send_bytes % 256);
             memcpy(&data_packet[4], msg, send_bytes);
@@ -181,13 +181,16 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         {
             return;
         }
+        memset(buf, 0, MSG_MAX_SIZE-6);
 
         do
         {
+            memset(buf, 0, MSG_MAX_SIZE-6);
             res = llread(buf);
             if (res < 0)
             {
                 printf("llread failed\n");
+                memset(buf, 0, MSG_MAX_SIZE-6);
                 continue;
             }
             printf("llrread return %d\n", res);

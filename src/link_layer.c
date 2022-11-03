@@ -175,8 +175,10 @@ int llread(unsigned char *packet)
 
     int read_bytes = 0;
 
-    if ((read_bytes = read_message(fd, buf, MSG_MAX_SIZE * 2, CMD_DATA)) < 0)
+    if ((read_bytes = read_message(fd, buf, MSG_MAX_SIZE * 2, CMD_DATA)) < 0){
+        free(buf);
         return -1;
+    }
 
     uint8_t *destuffed_msg = (uint8_t *)malloc(MSG_MAX_SIZE);
 
@@ -184,6 +186,8 @@ int llread(unsigned char *packet)
 
     if ((msg_size = msg_destuff(buf, 4, read_bytes, destuffed_msg)) < 0)
     {
+        free(buf);
+        free(destuffed_msg);
         printf("Read failed\n");
         return -1;
     }
