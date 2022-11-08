@@ -76,8 +76,10 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
     ll.nRetransmissions = nTries;
     ll.timeout = timeout;
 
-    if (llopen(ll) == -1)
+    if (llopen(ll) == -1){
         printf("llopen failed\n");
+        return;
+    }
 
     switch (ll.role)
     {
