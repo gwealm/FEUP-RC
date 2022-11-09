@@ -119,7 +119,6 @@ void set_control(uint8_t s);
 void set_state(state s);
 void set_role(role r);
 void set_command(command c);
-void set_reponse(response r);
 
 /**
  * @brief Updates the State Machine

@@ -192,8 +192,6 @@ int llread(unsigned char *packet)
         return -1;
     }
 
-    free(buf);
-
     printf("bytes: %d\n", read_bytes);
     printf("destuff size: %d\2\n", msg_size);
     unsigned char rcv_bcc2 = destuffed_msg[msg_size - 2];
