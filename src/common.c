@@ -62,13 +62,3 @@ int msg_destuff(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg
     return i;
 }
 
-char *get_filename_from_path(char *path)
-{
-    char *filename = path, *p;
-    for (p = path; *p; p++)
-    {
-        if (*p == '/' || *p == ':' || *p == '\\')
-            filename = p;
-    }
-    return filename;
-}

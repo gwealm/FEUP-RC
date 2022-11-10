@@ -119,7 +119,6 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         res = llwrite(packet, start_size);
         if (res < 0)
             printf("llwrite failed\n");
-        printf("llwrite return %d :)))\n", res);
         free(packet);
 
         unsigned char msg[MSG_MAX_SIZE - 6]; // should have macro for this
@@ -162,7 +161,6 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         res = llwrite(packet1, end_size);
         if (res < 0)
             printf("llwrite failed\n");
-        printf("llwrite return %d :)))\n", res);
         free(packet1);
 
         break;
@@ -176,7 +174,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
             printf("llread failed\n");
             return;
         }
-        printf("llread return %d\n", res);
+        printf("llread: %d bytes read\n", res);
 
         // parse control packet (start packet)
         if (parse_packet(buf, res, filename) < 0)
@@ -195,7 +193,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                 memset(buf, 0, MSG_MAX_SIZE-6);
                 continue;
             }
-            printf("llrread return %d\n", res);
+            printf("llread: %d bytes read\n", res);
             // parse packet
             if (parse_packet(buf, res, filename) < 0)
             {

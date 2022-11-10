@@ -141,7 +141,7 @@ int close_receiver(int fd)
 
 int close_transmissor(int fd)
 {
-    printf("DISCONNECTING TRANSMITTER...\n");
+    printf("Disconnecting transmitter\n");
     if (send_s_frame(fd, ADDR, 0x0B, CMD_DISC) < 0)
         return -1;
     return send_s_frame(fd, ADDR, 0x07, NO_RESP);
@@ -192,12 +192,12 @@ int llread(unsigned char *packet)
         return -1;
     }
 
-    printf("bytes: %d\n", read_bytes);
-    printf("destuff size: %d\2\n", msg_size);
+    //printf("bytes: %d\n", read_bytes);
+    //printf("destuff size: %d\2\n", msg_size);
     unsigned char rcv_bcc2 = destuffed_msg[msg_size - 2];
-    printf("rcv_bcc2: %x\n", rcv_bcc2);
+    //printf("rcv_bcc2: %x\n", rcv_bcc2);
     unsigned char bcc2 = generate_bcc2(destuffed_msg + 4, msg_size - 6); // data and data length (check these args)
-    printf("bcc2: %x\n", bcc2);
+    //printf("bcc2: %x\n", bcc2);
 
     // case correct bcc2 and correct sequence_number
     if ((rcv_bcc2 == bcc2) && ((get_control() == 0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1)))
